@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポモドーロタイマー</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>ポモドーロタイマー</h1>
+        </header>
+
+        <main class="main-content">
+            <!-- タイマー表示セクション -->
+            <section class="timer-section">
+                <div class="mode-label" id="modeLabel" aria-label="現在のモード">
+                    作業中
+                </div>
+
+                <!-- 円形プログレスバー -->
+                <div class="circle-progress-wrapper">
+                    <svg class="circle-progress" viewBox="0 0 200 200" aria-hidden="true">
+                        <circle class="progress-bg" cx="100" cy="100" r="90"></circle>
+                        <circle class="progress-fill" id="progressCircle" cx="100" cy="100" r="90"></circle>
+                    </svg>
+                    <div class="timer-display" id="timerDisplay" role="status" aria-live="polite">
+                        25:00
+                    </div>
+                </div>
+
+                <!-- 操作ボタン -->
+                <div class="button-group">
+                    <button id="startBtn" class="btn btn-primary" aria-label="タイマーを開始">
+                        開始
+                    </button>
+                    <button id="resetBtn" class="btn btn-secondary" aria-label="タイマーをリセット">
+                        リセット
+                    </button>
+                    <button id="skipBtn" class="btn btn-secondary" aria-label="次のモードへスキップ">
+                        スキップ
+                    </button>
+                </div>
+
+                <!-- キーボードショートカット情報 -->
+                <div class="shortcuts-info">
+                    <p><kbd>Space</kbd>: 開始/一時停止 | <kbd>R</kbd>: リセット</p>
+                </div>
+            </section>
+
+            <!-- 今日の進捗カード -->
+            <section class="progress-card">
+                <h2>今日の進捗</h2>
+                <div class="progress-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">完了</div>
+                        <div class="stat-value" id="sessionsCompleted">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">集中時間</div>
+                        <div class="stat-value" id="totalFocusTime">0時間0分</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 設定パネル -->
+            <section class="settings-card">
+                <h2>設定</h2>
+                
+                <div class="settings-group">
+                    <label for="workDuration">作業時間（分）</label>
+                    <input type="number" id="workDuration" min="1" max="60" value="25" class="input-field">
+                </div>
+
+                <div class="settings-group">
+                    <label for="shortBreakDuration">短休憩（分）</label>
+                    <input type="number" id="shortBreakDuration" min="1" max="30" value="5" class="input-field">
+                </div>
+
+                <div class="settings-group">
+                    <label for="longBreakDuration">長休憩（分）</label>
+                    <input type="number" id="longBreakDuration" min="1" max="60" value="15" class="input-field">
+                </div>
+
+                <div class="settings-group">
+                    <label for="longBreakInterval">長休憩の間隔（セッション数）</label>
+                    <input type="number" id="longBreakInterval" min="1" max="10" value="4" class="input-field">
+                </div>
+
+                <div class="settings-group">
+                    <label>
+                        <input type="checkbox" id="autoStartToggle" class="checkbox-field">
+                        自動開始
+                    </label>
+                </div>
+
+                <div class="settings-group">
+                    <label>
+                        <input type="checkbox" id="soundToggle" checked class="checkbox-field">
+                        サウンド
+                    </label>
+                </div>
+
+                <div class="settings-group">
+                    <label>
+                        <input type="checkbox" id="notificationToggle" checked class="checkbox-field">
+                        ブラウザ通知
+                    </label>
+                </div>
+
+                <button id="applySettingsBtn" class="btn btn-primary settings-apply-btn">
+                    適用
+                </button>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026 Pomodoro Timer</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/storage.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
