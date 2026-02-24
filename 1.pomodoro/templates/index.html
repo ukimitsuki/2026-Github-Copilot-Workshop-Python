@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポモドーロタイマー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --primary-color: #4CAF50;
+            --secondary-color: #2196F3;
+            --danger-color: #f44336;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        /* ダークテーマ */
+        body.theme-dark {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --card-bg: #2d2d2d;
+        }
+
+        /* フォーカスモード */
+        body.theme-focus {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --card-bg: #1a1a1a;
+        }
+
+        /* パーティクル用のキャンバス */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        .timer-section {
+            text-align: center;
+        }
+
+        /* 円形プログレスバー */
+        .progress-ring {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 30px;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.3s ease, stroke 0.5s ease;
+        }
+
+        .timer-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button.secondary {
+            background: var(--secondary-color);
+        }
+
+        button.danger {
+            background: var(--danger-color);
+        }
+
+        /* 設定セクション */
+        .settings-group {
+            margin-bottom: 25px;
+        }
+
+        .settings-group h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .setting-item {
+            margin-bottom: 15px;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .setting-item select,
+        .setting-item input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        /* ゲーミフィケーション */
+        .gamification-section {
+            text-align: center;
+        }
+
+        .level-display {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .xp-bar {
+            background: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .xp-fill {
+            background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .badges-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            animation: badgeAppear 0.5s ease;
+        }
+
+        @keyframes badgeAppear {
+            from {
+                opacity: 0;
+                transform: scale(0);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* チャート */
+        .chart-container {
+            margin-top: 20px;
+            height: 200px;
+            position: relative;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 100%;
+            gap: 5px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: var(--primary-color);
+            border-radius: 5px 5px 0 0;
+            min-height: 5px;
+            position: relative;
+            transition: height 0.3s ease;
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.8em;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    
+    <div class="container">
+        <header>
+            <h1>🍅 ポモドーロタイマー</h1>
+            <p>集中力を高める時間管理ツール</p>
+        </header>
+
+        <div class="main-content">
+            <!-- タイマーセクション -->
+            <div class="card timer-section">
+                <h2>タイマー</h2>
+                <div class="progress-ring">
+                    <svg width="300" height="300">
+                        <circle
+                            cx="150"
+                            cy="150"
+                            r="140"
+                            stroke="#e0e0e0"
+                            stroke-width="20"
+                            fill="none"
+                        />
+                        <circle
+                            id="progress-circle"
+                            class="progress-ring-circle"
+                            cx="150"
+                            cy="150"
+                            r="140"
+                            stroke="#2196F3"
+                            stroke-width="20"
+                            fill="none"
+                            stroke-dasharray="880"
+                            stroke-dashoffset="0"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    <div class="timer-display" id="timer-display">25:00</div>
+                </div>
+
+                <div class="controls">
+                    <button id="start-btn" onclick="startTimer()">開始</button>
+                    <button id="pause-btn" class="secondary" onclick="pauseTimer()" disabled>一時停止</button>
+                    <button id="reset-btn" class="danger" onclick="resetTimer()">リセット</button>
+                </div>
+
+                <div class="setting-item">
+                    <label>タイマーモード</label>
+                    <select id="mode-select" onchange="changeMode()">
+                        <option value="focus">集中時間</option>
+                        <option value="short-break">短い休憩</option>
+                        <option value="long-break">長い休憩</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 設定とゲーミフィケーションのタブ -->
+            <div class="card">
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab('gamification')">ゲーミフィケーション</button>
+                    <button class="tab-button" onclick="switchTab('settings')">設定</button>
+                    <button class="tab-button" onclick="switchTab('stats')">統計</button>
+                </div>
+
+                <!-- ゲーミフィケーションタブ -->
+                <div id="gamification-tab" class="tab-content active">
+                    <div class="gamification-section">
+                        <div class="level-display">
+                            レベル <span id="level">1</span>
+                        </div>
+                        
+                        <div class="xp-bar">
+                            <div class="xp-fill" id="xp-fill" style="width: 0%">
+                                <span id="xp-text">0 / 100 XP</span>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="total-pomodoros">0</div>
+                                <div class="stat-label">完了したポモドーロ</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="streak-days">0</div>
+                                <div class="stat-label">連続日数 🔥</div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <h3>🏆 獲得バッジ</h3>
+                            <div class="badges-container" id="badges-container">
+                                <p style="opacity: 0.6;">バッジはまだありません</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 設定タブ -->
+                <div id="settings-tab" class="tab-content">
+                    <div class="settings-group">
+                        <h3>⏱️ 時間設定</h3>
+                        <div class="setting-item">
+                            <label>集中時間</label>
+                            <select id="focus-duration">
+                                <option value="15">15分</option>
+                                <option value="25" selected>25分</option>
+                                <option value="35">35分</option>
+                                <option value="45">45分</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>短い休憩</label>
+                            <select id="short-break">
+                                <option value="5" selected>5分</option>
+                                <option value="10">10分</option>
+                                <option value="15">15分</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>長い休憩</label>
+                            <select id="long-break">
+                                <option value="15" selected>15分</option>
+                                <option value="20">20分</option>
+                                <option value="30">30分</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>🎨 テーマ</h3>
+                        <div class="setting-item">
+                            <select id="theme-select">
+                                <option value="light" selected>ライトモード</option>
+                                <option value="dark">ダークモード</option>
+                                <option value="focus">フォーカスモード</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>🔊 サウンド</h3>
+                        <div class="setting-item checkbox-group">
+                            <input type="checkbox" id="sound-start" checked>
+                            <label for="sound-start">開始音</label>
+                        </div>
+                        <div class="setting-item checkbox-group">
+                            <input type="checkbox" id="sound-end" checked>
+                            <label for="sound-end">終了音</label>
+                        </div>
+                        <div class="setting-item checkbox-group">
+                            <input type="checkbox" id="sound-tick">
+                            <label for="sound-tick">Tick音</label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>✨ ビジュアルエフェクト</h3>
+                        <div class="setting-item checkbox-group">
+                            <input type="checkbox" id="visual-effects" checked>
+                            <label for="visual-effects">背景エフェクトを有効化</label>
+                        </div>
+                    </div>
+
+                    <button onclick="saveSettings()" style="width: 100%; margin-top: 20px;">設定を保存</button>
+                </div>
+
+                <!-- 統計タブ -->
+                <div id="stats-tab" class="tab-content">
+                    <div class="settings-group">
+                        <h3>📊 週間統計</h3>
+                        <div class="chart-container">
+                            <div class="chart-bars" id="weekly-chart"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>📈 今月の統計</h3>
+                        <div class="stat-card" style="margin-top: 10px;">
+                            <div class="stat-value" id="month-total">0</div>
+                            <div class="stat-label">今月の完了数</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timerInterval = null;
+        let timeLeft = 25 * 60; // 秒数
+        let totalTime = 25 * 60;
+        let isRunning = false;
+        let currentMode = 'focus';
+        let settings = {};
+        let particlesAnimation = null;
+
+        // 初期化
+        async function init() {
+            await loadSettings();
+            await loadStats();
+            applySettings();
+            updateDisplay();
+            initParticles();
+        }
+
+        // 設定を読み込み
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings');
+                settings = await response.json();
+                
+                document.getElementById('focus-duration').value = settings.focus_duration;
+                document.getElementById('short-break').value = settings.short_break;
+                document.getElementById('long-break').value = settings.long_break;
+                document.getElementById('theme-select').value = settings.theme;
+                document.getElementById('sound-start').checked = settings.sound_start;
+                document.getElementById('sound-end').checked = settings.sound_end;
+                document.getElementById('sound-tick').checked = settings.sound_tick;
+                document.getElementById('visual-effects').checked = settings.visual_effects;
+            } catch (error) {
+                console.error('設定の読み込みに失敗:', error);
+            }
+        }
+
+        // 設定を保存
+        async function saveSettings() {
+            settings = {
+                focus_duration: parseInt(document.getElementById('focus-duration').value),
+                short_break: parseInt(document.getElementById('short-break').value),
+                long_break: parseInt(document.getElementById('long-break').value),
+                theme: document.getElementById('theme-select').value,
+                sound_start: document.getElementById('sound-start').checked,
+                sound_end: document.getElementById('sound-end').checked,
+                sound_tick: document.getElementById('sound-tick').checked,
+                visual_effects: document.getElementById('visual-effects').checked
+            };
+
+            try {
+                await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                
+                applySettings();
+                showNotification('設定を保存しました！');
+            } catch (error) {
+                console.error('設定の保存に失敗:', error);
+            }
+        }
+
+        // 設定を適用
+        function applySettings() {
+            // テーマの適用
+            document.body.className = 'theme-' + settings.theme;
+            
+            // ビジュアルエフェクトの表示/非表示
+            const canvas = document.getElementById('particles-canvas');
+            canvas.style.display = settings.visual_effects ? 'block' : 'none';
+            
+            // モードに応じて時間を設定
+            if (currentMode === 'focus') {
+                totalTime = settings.focus_duration * 60;
+                timeLeft = totalTime;
+            } else if (currentMode === 'short-break') {
+                totalTime = settings.short_break * 60;
+                timeLeft = totalTime;
+            } else if (currentMode === 'long-break') {
+                totalTime = settings.long_break * 60;
+                timeLeft = totalTime;
+            }
+            
+            updateDisplay();
+        }
+
+        // モード変更
+        function changeMode() {
+            if (isRunning) {
+                pauseTimer();
+            }
+            
+            currentMode = document.getElementById('mode-select').value;
+            
+            if (currentMode === 'focus') {
+                totalTime = settings.focus_duration * 60;
+            } else if (currentMode === 'short-break') {
+                totalTime = settings.short_break * 60;
+            } else {
+                totalTime = settings.long_break * 60;
+            }
+            
+            timeLeft = totalTime;
+            updateDisplay();
+        }
+
+        // タイマー開始
+        function startTimer() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('pause-btn').disabled = false;
+            
+            if (settings.sound_start) {
+                playSound('start');
+            }
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                
+                if (settings.sound_tick && timeLeft % 1 === 0) {
+                    playSound('tick');
+                }
+                
+                updateDisplay();
+                
+                if (timeLeft <= 0) {
+                    completeTimer();
+                }
+            }, 1000);
+        }
+
+        // タイマー一時停止
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('pause-btn').disabled = true;
+        }
+
+        // タイマーリセット
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = totalTime;
+            updateDisplay();
+        }
+
+        // タイマー完了
+        async function completeTimer() {
+            pauseTimer();
+            
+            if (settings.sound_end) {
+                playSound('end');
+            }
+            
+            // 集中時間が完了した場合のみ統計を更新
+            if (currentMode === 'focus') {
+                try {
+                    const response = await fetch('/api/complete', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    // 統計情報を更新
+                    await loadStats();
+                    
+                    // 新しいバッジがあれば通知
+                    if (result.new_badges && result.new_badges.length > 0) {
+                        showNotification('新しいバッジを獲得しました: ' + result.new_badges.join(', ') + ' 🎉');
+                    } else {
+                        showNotification('ポモドーロ完了！ +25 XP 🎉');
+                    }
+                } catch (error) {
+                    console.error('完了処理に失敗:', error);
+                }
+            } else {
+                showNotification('休憩時間が終了しました！');
+            }
+            
+            resetTimer();
+        }
+
+        // 表示を更新
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer-display').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // プログレスバーの更新
+            const progress = 1 - (timeLeft / totalTime);
+            const circumference = 2 * Math.PI * 140;
+            const offset = circumference * progress;
+            const circle = document.getElementById('progress-circle');
+            circle.style.strokeDashoffset = offset;
+            
+            // 色のグラデーション変化
+            const ratio = timeLeft / totalTime;
+            let color;
+            if (ratio > 0.6) {
+                color = '#2196F3'; // 青
+            } else if (ratio > 0.3) {
+                color = '#FFC107'; // 黄
+            } else {
+                color = '#f44336'; // 赤
+            }
+            circle.style.stroke = color;
+        }
+
+        // 統計情報を読み込み
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('level').textContent = stats.level;
+                document.getElementById('total-pomodoros').textContent = stats.total_pomodoros;
+                document.getElementById('streak-days').textContent = stats.streak_days;
+                
+                // XPバーの更新
+                const xpInLevel = stats.xp % 100;
+                const nextLevelXP = 100;
+                document.getElementById('xp-fill').style.width = (xpInLevel / nextLevelXP * 100) + '%';
+                document.getElementById('xp-text').textContent = `${xpInLevel} / ${nextLevelXP} XP`;
+                
+                // バッジの表示
+                const badgesContainer = document.getElementById('badges-container');
+                if (stats.badges.length > 0) {
+                    badgesContainer.innerHTML = stats.badges.map(badge => 
+                        `<div class="badge">${badge}</div>`
+                    ).join('');
+                } else {
+                    badgesContainer.innerHTML = '<p style="opacity: 0.6;">バッジはまだありません</p>';
+                }
+                
+                // 週間チャートの更新
+                const weeklyChart = document.getElementById('weekly-chart');
+                const maxCount = Math.max(...stats.weekly_data.map(d => d.count), 1);
+                weeklyChart.innerHTML = stats.weekly_data.map(day => {
+                    const height = (day.count / maxCount) * 100;
+                    return `<div class="chart-bar" style="height: ${height}%">
+                        <div class="chart-label">${day.day}</div>
+                    </div>`;
+                }).join('');
+                
+                // 今月の統計
+                const monthTotal = stats.monthly_data.reduce((sum, day) => sum + day.count, 0);
+                document.getElementById('month-total').textContent = monthTotal;
+                
+            } catch (error) {
+                console.error('統計の読み込みに失敗:', error);
+            }
+        }
+
+        // タブ切り替え
+        function switchTab(tabName) {
+            // すべてのタブを非アクティブ化
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 選択されたタブをアクティブ化
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // 統計タブの場合は最新データを読み込み
+            if (tabName === 'stats') {
+                loadStats();
+            }
+        }
+
+        // 通知を表示
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // サウンド再生（シンプルなビープ音）
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (type === 'start') {
+                oscillator.frequency.value = 440; // A4
+                gainNode.gain.value = 0.3;
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } else if (type === 'end') {
+                oscillator.frequency.value = 880; // A5
+                gainNode.gain.value = 0.3;
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } else if (type === 'tick') {
+                oscillator.frequency.value = 220;
+                gainNode.gain.value = 0.05;
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.01);
+            }
+        }
+
+        // パーティクルアニメーション
+        function initParticles() {
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            const particleCount = 50;
+            
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.radius = Math.random() * 2 + 1;
+                }
+                
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+                
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(33, 150, 243, 0.5)';
+                    ctx.fill();
+                }
+            }
+            
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                });
+                
+                // パーティクル間の線を描画
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 100) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(33, 150, 243, ${0.2 * (1 - distance / 100)})`;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                
+                particlesAnimation = requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            // ウィンドウリサイズ対応
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+
+        // タブ切り替え（グローバル関数）
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            if (tabName === 'stats') {
+                loadStats();
+            }
+        };
+
+        // グローバル関数の定義
+        window.startTimer = startTimer;
+        window.pauseTimer = pauseTimer;
+        window.resetTimer = resetTimer;
+        window.changeMode = changeMode;
+        window.saveSettings = saveSettings;
+
+        // ページ読み込み時に初期化
+        init();
+    </script>
+</body>
+</html>
