@@ -35,9 +35,10 @@ def test_calculate_level():
     """レベル計算が正しく行われる"""
     assert calculate_level(0) == 1
     assert calculate_level(25) == 1
+    assert calculate_level(99) == 1
     assert calculate_level(100) == 2
-    assert calculate_level(400) == 3
-    assert calculate_level(900) == 4
+    assert calculate_level(200) == 3
+    assert calculate_level(300) == 4
 
 
 def test_check_badges_initial():
@@ -149,7 +150,7 @@ def test_api_settings_post(client):
     assert response.status_code == 200
     
     result = json.loads(response.data)
-    assert result['success'] == True
+    assert result['success']
     
     # 設定が正しく保存されたか確認
     response = client.get('/api/settings')
@@ -169,7 +170,7 @@ def test_api_complete(client):
     assert response.status_code == 200
     
     result = json.loads(response.data)
-    assert result['success'] == True
+    assert result['success']
     assert 'xp' in result
     assert 'level' in result
     assert 'new_badges' in result

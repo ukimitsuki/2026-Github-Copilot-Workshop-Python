@@ -33,7 +33,7 @@ def save_user_data(data):
 
 def calculate_level(xp):
     """XPからレベルを計算"""
-    return int((xp / 100) ** 0.5) + 1
+    return xp // 100 + 1
 
 def check_badges(data):
     """達成バッジをチェック"""
@@ -105,13 +105,10 @@ def complete_pomodoro():
         last_date = datetime.fromisoformat(data['last_completion_date'])
         days_diff = (today.date() - last_date.date()).days
         
-        if days_diff == 0:
-            # 同じ日
-            pass
-        elif days_diff == 1:
+        if days_diff == 1:
             # 連続
             data['streak_days'] += 1
-        else:
+        elif days_diff > 1:
             # 途切れた
             data['streak_days'] = 1
     else:

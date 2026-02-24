@@ -429,9 +429,9 @@
             <!-- 設定とゲーミフィケーションのタブ -->
             <div class="card">
                 <div class="tabs">
-                    <button class="tab-button active" onclick="switchTab('gamification')">ゲーミフィケーション</button>
-                    <button class="tab-button" onclick="switchTab('settings')">設定</button>
-                    <button class="tab-button" onclick="switchTab('stats')">統計</button>
+                    <button class="tab-button active" onclick="switchTab('gamification', event)">ゲーミフィケーション</button>
+                    <button class="tab-button" onclick="switchTab('settings', event)">設定</button>
+                    <button class="tab-button" onclick="switchTab('stats', event)">統計</button>
                 </div>
 
                 <!-- ゲーミフィケーションタブ -->
@@ -565,6 +565,7 @@
         let currentMode = 'focus';
         let settings = {};
         let particlesAnimation = null;
+        let audioContext = null;
 
         // 初期化
         async function init() {
@@ -573,6 +574,8 @@
             applySettings();
             updateDisplay();
             initParticles();
+            // AudioContextの初期化
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
 
         // 設定を読み込み
@@ -813,7 +816,7 @@
         }
 
         // タブ切り替え
-        function switchTab(tabName) {
+        function switchTab(tabName, event) {
             // すべてのタブを非アクティブ化
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -843,7 +846,10 @@
 
         // サウンド再生（シンプルなビープ音）
         function playSound(type) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             
@@ -945,20 +951,10 @@
             });
         }
 
-        // タブ切り替え（グローバル関数）
-        window.switchTab = function(tabName) {
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(tabName + '-tab').classList.add('active');
-            
-            if (tabName === 'stats') {
-                loadStats();
-            }
-        };
-
         // グローバル関数の定義
+        window.switchTab = function(tabName, event) {
+            switchTab(tabName, event);
+        };
         window.startTimer = startTimer;
         window.pauseTimer = pauseTimer;
         window.resetTimer = resetTimer;
