@@ -111,6 +111,7 @@ def complete_pomodoro():
         elif days_diff > 1:
             # 途切れた
             data['streak_days'] = 1
+        # days_diff == 0 の場合は同じ日なのでstreak_daysは変更しない
     else:
         data['streak_days'] = 1
     

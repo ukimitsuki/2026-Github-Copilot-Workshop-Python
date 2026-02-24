@@ -847,7 +847,7 @@
         // サウンド再生（シンプルなビープ音）
         function playSound(type) {
             if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                return;
             }
             
             const oscillator = audioContext.createOscillator();
@@ -952,9 +952,7 @@
         }
 
         // グローバル関数の定義
-        window.switchTab = function(tabName, event) {
-            switchTab(tabName, event);
-        };
+        window.switchTab = switchTab;
         window.startTimer = startTimer;
         window.pauseTimer = pauseTimer;
         window.resetTimer = resetTimer;

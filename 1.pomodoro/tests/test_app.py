@@ -9,21 +9,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import app, load_user_data, save_user_data, calculate_level, check_badges
 
 
-@pytest.fixture
-def client():
-    """テスト用のFlaskクライアントを作成"""
-    app.config['TESTING'] = True
-    with app.test_client() as client:
-        yield client
-
-
-@pytest.fixture
-def temp_data_file(tmp_path):
-    """一時データファイルを作成"""
-    data_file = tmp_path / "user_data.json"
-    return str(data_file)
-
-
 def test_index_page(client):
     """インデックスページが正常に表示される"""
     response = client.get('/')
